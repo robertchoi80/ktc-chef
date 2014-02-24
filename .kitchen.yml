@@ -1,0 +1,50 @@
+---
+provisioner:
+  name: chef_zero
+  require_chef_omnibus: latest
+
+driver:
+  name: vagrant
+  customize:
+    memory: 512
+
+platforms:
+  - name: centos-6.4
+  - name: ubuntu-12.04
+
+suites:
+  - name: default
+    run_list:
+      - recipe[ktc-chef]
+    attributes:
+      kt:
+        report_handlers:
+          - json
+
+  - name: hipchat_chef_handler
+    run_list:
+      - recipe[ktc-chef]
+    attributes:
+      kt:
+        hipchat:
+          api_token: 598de357f0ae8d7f8f3556e0cf8347
+          oom_name: chef_alerts
+          notify_users: false
+          report_success: true
+        report_handlers:
+          - hipchat
+
+  - name: graphite_chef_handler
+    run_list:
+      - recipe[ktc-testing]
+      - recipe[etcd::compile_time]
+      - recipe[ktc-graphite::master]
+      - recipe[ktc-chef]
+    attributes:
+      etcd:
+        servers:
+          - 127.0.0.1
+      ha_disabled: true
+      kt:
+        report_handlers:
+          - graphite
