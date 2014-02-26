@@ -13,5 +13,6 @@ end
 depends 'chef-client'
 depends 'chef_handler'
 depends 'ktc-package'
+depends 'logstash_handler'
 depends 'omnibus_updater'
 depends 'services'
