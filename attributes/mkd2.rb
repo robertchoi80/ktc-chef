@@ -4,6 +4,7 @@ default['kt']['report_handlers'] = %w(
   json
   graphite
   hipchat
+  sensu
 )
 
 # parameters to the hipchat report handler, order matters.

@@ -1,12 +1,12 @@
 ---
 provisioner:
   name: chef_zero
-  require_chef_omnibus: latest
+  require_chef_omnibus: 11.8.0 
 
 driver:
   name: vagrant
   customize:
-    memory: 512
+    memory: 1024
 
 platforms:
   - name: centos-6.4
@@ -34,20 +34,29 @@ suites:
         report_handlers:
           - hipchat
 
-  - name: graphite_chef_handler
+  - name: graphite_sensu_chef_handler
     run_list:
       - recipe[ktc-testing]
       - recipe[etcd::compile_time]
       - recipe[ktc-graphite::master]
+      - recipe[ktc-sensu::master]
       - recipe[ktc-chef]
     attributes:
+      kitchen: true
+      ha_disabled: true
+      openstack:
+        developer_mode: true
       etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
         servers:
           - 127.0.0.1
-      ha_disabled: true
+      sensu:
+        graphite_address: 127.0.0.1
       kt:
         report_handlers:
           - graphite
+          - sensu
 
   - name: logstash_chef_handler
     run_list:
@@ -58,6 +67,8 @@ suites:
       - recipe[ktc-chef]
     attributes:
       etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
         servers:
           - 127.0.0.1
       ha_disabled: true

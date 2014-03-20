@@ -11,4 +11,5 @@ group "integration" do
   cookbook "ktc-testing"
   cookbook "etcd"
   cookbook "ktc-graphite"
+  cookbook "ktc-sensu"
 end
