@@ -4,7 +4,7 @@
 
 include_recipe 'services'
 
-ep = Services::Endpoint.new 'logstash'
+ep = Services::Endpoint.new 'logstash-server'
 ep.load
 Chef::Log.info "Logstash service ip - #{ep.ip}"
 Chef::Log.info "Logstash service port - #{ep.port}"
