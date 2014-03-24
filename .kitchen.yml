@@ -53,6 +53,7 @@ suites:
     run_list:
       - recipe[ktc-testing]
       - recipe[etcd::compile_time]
+      - recipe[ktc-monitor::client]
       - recipe[ktc-logging::logstash]
       - recipe[ktc-chef]
     attributes:
