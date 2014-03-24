@@ -4,8 +4,6 @@
 
 include_recipe 'services'
 
-chef_gem 'chef-handler-graphite'
-
 ep = Services::Endpoint.new 'logstash'
 ep.load
 Chef::Log.info "Logstash service ip - #{ep.ip}"
