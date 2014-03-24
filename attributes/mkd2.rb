@@ -1,10 +1,10 @@
 return unless chef_environment.eql?('mkd2')
 
-default['kt']['report_handlers'] = %w/
+default['kt']['report_handlers'] = %w(
   json
   graphite
   hipchat
-/
+)
 
 # parameters to the hipchat report handler, order matters.
 default['kt']['hipchat'] = {

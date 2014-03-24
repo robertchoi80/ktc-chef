@@ -1,9 +1,9 @@
 # configure chef client
 
-%w/
+%w(
   omnibus_updater
   chef-client::cron
-/.each do |recipe|
+).each do |recipe|
   include_recipe recipe
 end
 
