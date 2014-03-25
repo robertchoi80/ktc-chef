@@ -48,3 +48,19 @@ suites:
       kt:
         report_handlers:
           - graphite
+
+  - name: logstash_chef_handler
+    run_list:
+      - recipe[ktc-testing]
+      - recipe[etcd::compile_time]
+      - recipe[ktc-monitor::client]
+      - recipe[ktc-logging::logstash]
+      - recipe[ktc-chef]
+    attributes:
+      etcd:
+        servers:
+          - 127.0.0.1
+      ha_disabled: true
+      kt:
+        report_handlers:
+          - logstash

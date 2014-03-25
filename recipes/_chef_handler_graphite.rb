@@ -13,7 +13,7 @@ Chef::Log.info "Graphite service ip - #{ep.ip}"
 Chef::Log.info "Graphite service port - #{ep.port}"
 
 args = [
-  metric_key: "chef.#{node.chef_environment}.#{node['fqdn']}",
+  metric_key: "chef.#{node['hostname']}",
   graphite_host: ep.ip,
   graphite_port: ep.port
 ]
