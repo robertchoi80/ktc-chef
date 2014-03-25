@@ -6,22 +6,22 @@ require File.join(File.dirname(__FILE__), '_rabbitmq')
 require 'json'
 require 'oj'
 
-Oj.default_options = {:mode => :compat, :symbol_keys => true}
+Oj.default_options = { mode: :compat, symbol_keys: true }
 
 class Chef
   class Handler
     class Sensu
       class RabbitAPI
         def initialize(host, port, config_file)
-          @settings = Hash.new
-          @check = Hash.new
+          @settings = {}
+          @check = {}
 
           load_sensu_config(config_file)
           @settings[:rabbitmq][:host] = host
           @settings[:rabbitmq][:port] = port
 
-          @check['name'] = "chef_report"
-          @check['handlers'] = "default"
+          @check['name'] = 'chef_report'
+          @check['handlers'] = 'default'
           @check['standalone'] = true
         end
 
@@ -40,7 +40,8 @@ class Chef
         end
 
         def setup_rabbitmq
-          Chef::Log.info("connecting to rabbitmq: #{@settings[:rabbitmq][:host]}:#{@settings[:rabbitmq][:port]}")
+          Chef::Log.info("connecting to rabbitmq: \
+            #{@settings[:rabbitmq][:host]}:#{@settings[:rabbitmq][:port]}")
           @rabbitmq = RabbitMQ.connect(@settings[:rabbitmq])
           @rabbitmq.on_error do |error|
             Chef::Log.info("rabbitmq connection error: #{error.to_s}")
@@ -62,7 +63,7 @@ class Chef
             @check['output'] << "#{run_status.formatted_exception}"
             @check['status'] = 2
           else
-            @check['output'] = "Chef run converged on #{node['fqdn']} in #{run_status.elapsed_time}."
+            @check['output'] = "Chef run converged on #{node['fqdn']} in #{run_status.elapsed_time} secs."
             @check['status'] = 0
           end
 
@@ -78,27 +79,30 @@ class Chef
 
         def close
           EM::Timer.new(1) do
-            @rabbitmq.close 
-            EM::stop_event_loop
+            @rabbitmq.close
+            EM.stop_event_loop
           end
         end
       end
 
       class ReportSensu < Chef::Handler
-        def initialize(config={})
-          @rabbit_api = Chef::Handler::Sensu::RabbitAPI.new(config[:rabbit_host], config[:rabbit_port], config[:config_file])
-          EM::threadpool_size = 14
+        def initialize(config = {})
+          @rabbit_api = Chef::Handler::Sensu::RabbitAPI.new(
+              config[:rabbit_host],
+              config[:rabbit_port],
+              config[:config_file]
+          )
+          EM.threadpool_size = 14
         end
 
         def report
-          EM::run do
+          EM.run do
             @rabbit_api.setup_rabbitmq
             @rabbit_api.send_report(node, run_status)
             @rabbit_api.close
           end
         end
       end
-
     end
   end
 end

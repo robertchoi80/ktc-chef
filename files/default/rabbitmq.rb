@@ -16,9 +16,9 @@ class Chef
         attr_reader :channel
 
         def initialize
-          @on_error = Proc.new {}
-          @before_reconnect = Proc.new {}
-          @after_reconnect = Proc.new {}
+          @on_error = proc {}
+          @before_reconnect = proc {}
+          @after_reconnect = proc {}
         end
 
         def on_error(&block)
@@ -32,25 +32,25 @@ class Chef
         def after_reconnect(&block)
           @after_reconnect = block
         end
-        def connect(options={})
+
+        def connect(options = {})
           timeout = EM::Timer.new(10) do
             error = RabbitMQError.new('timed out while attempting to connect')
-            #Chef::Log.info("timed out while attempting to connect..")
             @on_error.call(error)
           end
-          on_failure = Proc.new do
+          on_failure = proc do
             error = RabbitMQError.new('failed to connect')
-            #Chef::Log.info("failed to connect")
             @on_error.call(error)
           end
-          @connection = AMQP.connect(options, {
-            :on_tcp_connection_failure => on_failure,
-            :on_possible_authentication_failure => on_failure
-          })
+          @connection = AMQP.connect(
+              options,
+              on_tcp_connection_failure: on_failure,
+              on_possible_authentication_failure: on_failure
+          )
           @connection.on_open do
             timeout.cancel
           end
-          reconnect = Proc.new do
+          reconnect = proc do
             unless @connection.reconnecting?
               @before_reconnect.call
               @connection.periodically_reconnect(5)
@@ -60,12 +60,9 @@ class Chef
           @connection.on_skipped_heartbeats(&reconnect)
           @channel = AMQP::Channel.new(@connection)
 
-          #Chef::Log.debug("Established channel: #{@channel.conn.broker_endpoint}")
-
           @channel.auto_recovery = true
           @channel.on_error do |channel, channel_close|
             error = RabbitMQError.new('rabbitmq channel closed')
-            #Chef::Log.info("abbitmq channel closed")
             @on_error.call(error)
           end
           prefetch = 1
@@ -87,9 +84,9 @@ class Chef
           @connection.close
         end
 
-        def self.connect(options={})
-          options ||= Hash.new
-          rabbitmq = self.new
+        def self.connect(options = {})
+          options ||= {}
+          rabbitmq = new
           rabbitmq.connect(options)
           rabbitmq
         end

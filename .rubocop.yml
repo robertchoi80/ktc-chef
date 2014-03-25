@@ -10,6 +10,7 @@ AllCops:
   Excludes:
     - test/**
     - vendor/**
+    - files/**
 
 Encoding:
   Enabled: false
