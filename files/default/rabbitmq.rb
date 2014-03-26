@@ -1,3 +1,5 @@
+# rubocop:disable all
+
 require 'rubygems'
 
 gem 'amqp', '1.0.0'

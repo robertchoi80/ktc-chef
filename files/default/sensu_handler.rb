@@ -1,3 +1,5 @@
+# rubocop:disable all
+
 require 'rubygems'
 
 gem 'oj', '2.0.9'
