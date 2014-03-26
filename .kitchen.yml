@@ -6,7 +6,7 @@ provisioner:
 driver:
   name: vagrant
   customize:
-    memory: 512
+    memory: 1024
 
 platforms:
   - name: centos-6.4
@@ -41,13 +41,37 @@ suites:
       - recipe[ktc-graphite::master]
       - recipe[ktc-chef]
     attributes:
+      ha_disabled: true
       etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
         servers:
           - 127.0.0.1
-      ha_disabled: true
       kt:
         report_handlers:
           - graphite
+
+  - name: sensu_chef_handler
+    run_list:
+      - recipe[ktc-testing]
+      - recipe[etcd::compile_time]
+      - recipe[ktc-sensu::master]
+      - recipe[ktc-chef]
+    attributes:
+      kitchen: true
+      ha_disabled: true
+      openstack:
+        developer_mode: true
+      etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
+        servers:
+          - 127.0.0.1
+      sensu:
+        graphite_address: 127.0.0.1
+      kt:
+        report_handlers:
+          - sensu
 
   - name: logstash_chef_handler
     run_list:
@@ -58,6 +82,8 @@ suites:
       - recipe[ktc-chef]
     attributes:
       etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
         servers:
           - 127.0.0.1
       ha_disabled: true
