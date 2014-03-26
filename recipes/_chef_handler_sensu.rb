@@ -20,13 +20,13 @@ Chef::Log.info("rabbit port: #{ep.port}")
 
 # This is needed for compiling Oj native extension.
 # Would be used until we have pre-compiled Oj package.
-package "build-essential"
+package 'build-essential'
 
 gem_packages.each do |pkg, ver|
   chef_gem pkg do
     version ver
     action :nothing
-    subscribes :install, "package[build-essential]", :immediately
+    subscribes :install, 'package[build-essential]', :immediately
   end
 end
 
