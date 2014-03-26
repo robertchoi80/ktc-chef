@@ -1,7 +1,7 @@
 ---
 provisioner:
   name: chef_zero
-  require_chef_omnibus: 11.8.0 
+  require_chef_omnibus: latest
 
 driver:
   name: vagrant
@@ -34,11 +34,27 @@ suites:
         report_handlers:
           - hipchat
 
-  - name: graphite_sensu_chef_handler
+  - name: graphite_chef_handler
     run_list:
       - recipe[ktc-testing]
       - recipe[etcd::compile_time]
       - recipe[ktc-graphite::master]
+      - recipe[ktc-chef]
+    attributes:
+      ha_disabled: true
+      etcd:
+        addr: 127.0.0.1
+        peer_addr: 127.0.0.1
+        servers:
+          - 127.0.0.1
+      kt:
+        report_handlers:
+          - graphite
+
+  - name: sensu_chef_handler
+    run_list:
+      - recipe[ktc-testing]
+      - recipe[etcd::compile_time]
       - recipe[ktc-sensu::master]
       - recipe[ktc-chef]
     attributes:
@@ -55,7 +71,6 @@ suites:
         graphite_address: 127.0.0.1
       kt:
         report_handlers:
-          - graphite
           - sensu
 
   - name: logstash_chef_handler
