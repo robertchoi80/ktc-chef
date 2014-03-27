@@ -56,15 +56,17 @@ class Chef
             Chef::Log.info('reconnected to rabbitmq')
           end
           @amq = @rabbitmq.channel
-          Chef::Log.info("established channel: #{@amq.conn.broker_endpoint}")
+          Chef::Log.debug("established channel: #{@amq.conn.broker_endpoint}")
         end
 
         def send_report(node, run_status)
           if run_status.failed?
-            @check['output'] = "Chef run failed on #{node['fqdn']}.."
-            @check['output'] << "#{run_status.formatted_exception}"
+            Chef::Log.info("Creating SENSU exception report")
+            @check['output'] = "Chef run failed on #{node['fqdn']}. \n"
+            @check['output'] << "ERROR: #{run_status.formatted_exception}"
             @check['status'] = 2
           else
+            Chef::Log.info("Creating SENSU run report")
             @check['output'] = "Chef run converged on #{node['fqdn']} in #{run_status.elapsed_time} secs."
             @check['status'] = 0
           end
