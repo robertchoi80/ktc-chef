@@ -5,6 +5,7 @@ require 'rubygems'
 gem 'oj', '2.0.9'
 
 require File.join(File.dirname(__FILE__), '_rabbitmq')
+require 'time'
 require 'json'
 require 'oj'
 
@@ -25,6 +26,7 @@ class Chef
           @check['name'] = 'chef_report'
           @check['handlers'] = 'default'
           @check['standalone'] = true
+          @check['issued'] = Time.now.to_i
         end
 
         def load_sensu_config(file)
@@ -42,8 +44,7 @@ class Chef
         end
 
         def setup_rabbitmq
-          Chef::Log.info("connecting to rabbitmq: \
-            #{@settings[:rabbitmq][:host]}:#{@settings[:rabbitmq][:port]}")
+          Chef::Log.info("connecting to rabbitmq: #{@settings[:rabbitmq][:host]}:#{@settings[:rabbitmq][:port]}")
           @rabbitmq = RabbitMQ.connect(@settings[:rabbitmq])
           @rabbitmq.on_error do |error|
             Chef::Log.info("rabbitmq connection error: #{error.to_s}")
@@ -62,7 +63,7 @@ class Chef
         def send_report(node, run_status)
           if run_status.failed?
             Chef::Log.info("Creating SENSU exception report")
-            @check['output'] = "Chef run failed on #{node['fqdn']}. \n"
+            @check['output'] = "Chef run failed on #{node['fqdn']}.\n"
             @check['output'] << "ERROR: #{run_status.formatted_exception}"
             @check['status'] = 2
           else
