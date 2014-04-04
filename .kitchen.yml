@@ -72,6 +72,7 @@ suites:
       kt:
         report_handlers:
           - sensu
+        report_interval: 2
 
   - name: logstash_chef_handler
     run_list:
