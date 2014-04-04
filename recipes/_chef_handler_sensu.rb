@@ -51,8 +51,8 @@ cookbook_file "#{node['chef_handler']['handler_path']}/_rabbitmq.rb" do
   action :create
 end
 
-cookbook_file "#{node['chef_handler']['handler_path']}/sensu_handler.rb" do
-  source 'sensu_handler.rb'
+template "#{node['chef_handler']['handler_path']}/sensu_handler.rb" do
+  source 'sensu_handler.rb.erb'
   mode 0640
   action :create
 end

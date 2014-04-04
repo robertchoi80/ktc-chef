@@ -28,12 +28,9 @@ class Chef
           @check['standalone'] = true
           @check['issued'] = Time.now.to_i
 
-          # Refer to node[:chef_client][:cron][:minute] for interval
-          # If that is '*/15', it means chef runs every 15 minutes,
-          # so we should convert that value to seconds to specify the interval
-          @check['interval'] = 15 * 60
-          @check['refresh'] = @check['interval']
-
+          # We should convert the interval to seconds
+          @check['interval'] = <%= node[:chef_client][:cron][:interval] * 60 %>
+          @check['refresh'] = @check['interval'] * <%= node[:kt][:report_interval] %>
         end
 
         def load_sensu_config(file)
