@@ -28,8 +28,7 @@ class Chef
           @check['standalone'] = true
           @check['issued'] = Time.now.to_i
 
-          # We should convert the interval to seconds
-          @check['interval'] = <%= node[:chef_client][:cron][:interval] * 60 %>
+          @check['interval'] = <%= node[:chef_client][:interval] %>
           @check['refresh'] = @check['interval'] * <%= node[:kt][:report_interval] %>
         end
 
