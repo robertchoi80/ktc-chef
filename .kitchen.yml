@@ -56,6 +56,7 @@ suites:
       - recipe[ktc-testing]
       - recipe[etcd::compile_time]
       - recipe[ktc-sensu::master]
+      - recipe[ktc-monitor::library_setup]
       - recipe[ktc-chef]
     attributes:
       kitchen: true
@@ -70,9 +71,9 @@ suites:
       sensu:
         graphite_address: 127.0.0.1
       kt:
+        report_interval: 1
         report_handlers:
           - sensu
-        report_interval: 2
 
   - name: logstash_chef_handler
     run_list:
