@@ -1,98 +1,9 @@
 # rubocop:disable all
-
-require 'rubygems'
-
-gem 'oj', '2.0.9'
-
-require File.join(File.dirname(__FILE__), '_rabbitmq')
-require 'time'
-require 'json'
-require 'oj'
-
-Oj.default_options = { mode: :compat, symbol_keys: true }
+require File.join('<%= node[:monitor][:shared_lib_path] %>', 'rabbit_api')
 
 class Chef
   class Handler
     class Sensu
-      class RabbitAPI
-        def initialize(host, port, config_file)
-          @settings = {}
-          @check = {}
-
-          load_sensu_config(config_file)
-          @settings[:rabbitmq][:host] = host
-          @settings[:rabbitmq][:port] = port
-
-          @check['name'] = 'chef_report'
-          @check['handlers'] = 'default'
-          @check['standalone'] = true
-          @check['issued'] = Time.now.to_i
-
-          @check['interval'] = <%= node[:chef_client][:interval] %>
-          @check['refresh'] = @check['interval'] * <%= node[:kt][:report_interval] %>
-        end
-
-        def load_sensu_config(file)
-          if File.file?(file) && File.readable?(file)
-            begin
-              contents = File.open(file, 'r').read
-              @settings = Oj.load(contents)
-              Chef::Log.info("Loaded Config:\n#{@settings[:rabbitmq]}")
-            rescue Oj::ParseError => error
-              Chef::Log.error('config file is invalid. Ignoring config file..')
-            end
-          else
-            Chef::Log.error('config file does not exist or is not readable')
-          end
-        end
-
-        def setup_rabbitmq
-          Chef::Log.info("connecting to rabbitmq: #{@settings[:rabbitmq][:host]}:#{@settings[:rabbitmq][:port]}")
-          @rabbitmq = RabbitMQ.connect(@settings[:rabbitmq])
-          @rabbitmq.on_error do |error|
-            Chef::Log.info("rabbitmq connection error: #{error.to_s}")
-            close
-          end
-          @rabbitmq.before_reconnect do
-            Chef::Log.debug('reconnecting to rabbitmq')
-          end
-          @rabbitmq.after_reconnect do
-            Chef::Log.info('reconnected to rabbitmq')
-          end
-          @amq = @rabbitmq.channel
-          Chef::Log.debug("established channel: #{@amq.conn.broker_endpoint}")
-        end
-
-        def send_report(node, run_status)
-          if run_status.failed?
-            Chef::Log.info("Creating SENSU exception report")
-            @check['output'] = "Chef run failed on #{node['fqdn']}.\n"
-            @check['output'] << "ERROR: #{run_status.formatted_exception}"
-            @check['status'] = 2
-          else
-            Chef::Log.info("Creating SENSU run report")
-            @check['output'] = "Chef run converged on #{node['fqdn']} in #{run_status.elapsed_time} secs."
-            @check['status'] = 0
-          end
-
-          payload = {
-            'client' => node['fqdn'],
-            'check' => @check
-          }
-
-          Chef::Log.info("publishing payload: #{payload}")
-
-          result_ = @amq.direct('results').publish(Oj.dump(payload))
-        end
-
-        def close
-          EM::Timer.new(1) do
-            @rabbitmq.close
-            EM.stop_event_loop
-          end
-        end
-      end
-
       class ReportSensu < Chef::Handler
         def initialize(config = {})
           @rabbit_api = Chef::Handler::Sensu::RabbitAPI.new(
@@ -101,12 +12,38 @@ class Chef
               config[:config_file]
           )
           EM.threadpool_size = 14
+          @check = {}
         end
 
         def report
           EM.run do
             @rabbit_api.setup_rabbitmq
-            @rabbit_api.send_report(node, run_status)
+
+            @check['name'] = 'chef_report'
+            @check['handlers'] = 'default'
+            @check['standalone'] = true
+            @check['issued'] = Time.now.to_i
+
+            @check['interval'] = <%= node[:chef_client][:interval] %>
+            @check['refresh'] = @check['interval'] * <%= node[:kt][:report_interval] %>
+
+            if run_status.failed?
+              Chef::Log.info("Creating SENSU exception report")
+              @check['output'] = "Chef run failed on #{node['fqdn']}.\n"
+              @check['output'] << "ERROR: #{run_status.formatted_exception}"
+              @check['status'] = 2
+            else
+              Chef::Log.info("Creating SENSU run report")
+              @check['output'] = "Chef run converged on #{node['fqdn']} in #{run_status.elapsed_time} secs."
+              @check['status'] = 0
+            end
+
+            payload = {
+              'client' => node['fqdn'],
+              'check' => @check
+            }
+
+            @rabbit_api.send_message(payload)
             @rabbit_api.close
           end
         end

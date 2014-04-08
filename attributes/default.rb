@@ -1,3 +1,6 @@
+# This is necessary for shared_lib_path and etc
+include_attribute 'ktc-monitor'
+
 # default attribs
 default['kt']['report_handlers'] = []
 
