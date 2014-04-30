@@ -9,6 +9,7 @@ metadata
 
 group "integration" do
   cookbook "ktc-testing"
+  cookbook "ktc-package", "= 0.1.20"
   cookbook "etcd"
   cookbook "ktc-graphite"
   cookbook "ktc-sensu"
